@@ -12,7 +12,7 @@ function AlumniSection() {
   // 1️⃣ Fetch Alumni from Backend
   useEffect(() => {
     axios
-      .get(${import.meta.env.VITE_BACKEND_URL}/api/alumni`)
+      .get(`${import.meta.env.VITE_BACKEND_URL}/api/alumni`)
       .then((res) => {
         setAlumniData(res.data);
         setLoaded(true);
