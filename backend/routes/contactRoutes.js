@@ -1,17 +1,7 @@
 import express from "express";
-import nodemailer from "nodemailer";
+import axios from "axios";
 
 const router = express.Router();
-
-// Helper: create mail transporter
-const createTransporter = () =>
-  nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER, // Gmail address
-      pass: process.env.EMAIL_PASS, // App password (not your real password)
-    },
-  });
 
 // POST /api/contact
 router.post("/", async (req, res) => {
@@ -22,29 +12,33 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const transporter = createTransporter();
+    // Brevo API Call
+    await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: { name: "SkillX Contact", email: process.env.EMAIL_FROM },
+        to: [{ email: process.env.RECEIVER_EMAIL }],
+        subject: `SkillX Contact Form - ${name}`,
+        htmlContent: `
+          <h2>📩 New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message}</p>
+        `,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const mailOptions = {
-      from: `"SkillX Contact" <${process.env.EMAIL_USER}>`,
-      to: process.env.RECEIVER_EMAIL,
-      replyTo: email,
-      subject: `SkillX Contact Form - ${name}`,
-      text: `
-📩 New Contact Form Submission
-------------------------------
-Name: ${name}
-Email: ${email}
-
-Message:
-${message}
-`,
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.status(200).json({ success: true, message: "Email sent successfully!" });
+    return res.status(200).json({ success: true, message: "Email sent successfully!" });
   } catch (error) {
-    console.error("❌ Error sending mail:", error);
-    res.status(500).json({ success: false, error: "Failed to send email" });
+    console.error("❌ Brevo API Error:", error?.response?.data || error);
+    return res.status(500).json({ success: false, error: "Failed to send email" });
   }
 });
 
