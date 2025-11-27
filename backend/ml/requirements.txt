@@ -1,0 +1,8 @@
+scipy
+joblib
+PyPDF2
+docx2txt
+numpy
+pandas
+scikit-learn
+nltk
