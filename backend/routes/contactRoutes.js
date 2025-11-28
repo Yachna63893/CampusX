@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
       {
         sender: {
           name: "SkillX Contact",
-          email: process.env.EMAIL_FROM, // e.g. no-reply@yourdomain.com or your Brevo-verified email
+          email: process.env.EMAIL_USER, // e.g. no-reply@yourdomain.com or your Brevo-verified email
         },
         to: [{ email: process.env.RECEIVER_EMAIL }],
         subject: `SkillX Contact Form - ${name}`,
