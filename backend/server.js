@@ -1,8 +1,8 @@
+// server.js
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import nodemailer from "nodemailer";
 
 import authRoutes from "./routes/auth.js";
 import alumniRoutes from "./routes/Alumni.js";
@@ -15,7 +15,6 @@ dotenv.config();
 
 const app = express();
 
-
 /* ---------------- Middleware ---------------- */
 app.use(
   cors({
@@ -25,7 +24,6 @@ app.use(
   })
 );
 
-// For non-simple requests, also handle preflight responses.
 app.use(express.json());
 
 /* ---------------- Routes ---------------- */
@@ -34,26 +32,12 @@ app.use("/api/alumni", alumniRoutes);
 app.use("/api/ml", mlRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/evaluation", evaluationRoutes);
+// you probably want a different base path for linkedinImageUpdater,
+// but keeping your original line:
 app.use("/api/alumni", linkedinImageUpdater);
 
 app.get("/", (req, res) => {
   res.json({ message: "🚀 Backend is running!" });
-});
-
-/* ---------------- Mailer Verification ---------------- */
-const mailer = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-});
-
-mailer.verify((err, success) => {
-  if (err) {
-    console.error("❌ Mailer not ready:", err);
-  } else {
-    console.log("✅ Mailer ready to send emails");
-  }
 });
 
 /* ---------------- MongoDB Connection ---------------- */
@@ -64,4 +48,6 @@ mongoose
 
 /* ---------------- Start Server ---------------- */
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🔥 Server running at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(🔥 Server running at http://localhost:${PORT})
+);
