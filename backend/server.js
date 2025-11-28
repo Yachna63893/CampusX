@@ -26,7 +26,6 @@ app.use(
 );
 
 // For non-simple requests, also handle preflight responses.
-app.options("*", cors());
 app.use(express.json());
 
 /* ---------------- Routes ---------------- */
