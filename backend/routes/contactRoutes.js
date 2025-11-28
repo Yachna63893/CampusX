@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
           email: process.env.EMAIL_FROM, // e.g. no-reply@yourdomain.com or your Brevo-verified email
         },
         to: [{ email: process.env.RECEIVER_EMAIL }],
-        subject: SkillX Contact Form - ${name},
+        subject: `SkillX Contact Form - ${name}`,
         htmlContent: `
           <h2>📩 New Contact Form Submission</h2>
           <p><strong>Name:</strong> ${name}</p>
