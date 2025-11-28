@@ -12,6 +12,11 @@ const ResumeAnalyzer = () => {
   const [missingKeywords, setMissingKeywords] = useState([]);
   const controls = useAnimation();
 
+  // 👇 ML API (direct)
+  const ML_API_URL =
+    import.meta.env.VITE_ML_API_URL ||
+    "https://resume-matcher-reyq.onrender.com/score-resume";
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -23,45 +28,57 @@ const ResumeAnalyzer = () => {
   const handleAnalyze = async (e) => {
     e.preventDefault();
 
-    // simple validation
-    if (!fileObj) return alert("Please upload a resume file first.");
+    if (!fileObj) {
+      alert("Please upload a resume file first.");
+      return;
+    }
+    if (!jobDesc.trim()) {
+      alert("Please paste the job description.");
+      return;
+    }
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
       const form = new FormData();
+      // ⚠️ field names MUST match your curl:
+      // resume=@... and jobText="..."
       form.append("resume", fileObj);
       form.append("jobText", jobDesc);
 
-      const res = await fetch(`${apiUrl}/api/ml/score-resume`, {
+      const res = await fetch(ML_API_URL, {
         method: "POST",
         body: form,
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => null);
-        throw new Error(err?.message || "Server error");
+        throw new Error(err?.message || `Server error (${res.status})`);
       }
 
       const data = await res.json();
 
-      // response shape: { status: 'success', result: { score, matched_keywords, missing_keywords, top_resume_keywords } }
-      const result = data?.result || data?.raw || {};
-  const score = (result.score ?? parseFloat(data?.raw)) || 0;
+      // Try to be flexible about shape:
+      // 1) { status: 'success', result: {...} }
+      // 2) { score, matched_keywords, ... }
+      const result = data.result || data;
+
+      let score = 0;
+      if (typeof result.score === "number") {
+        score = result.score;
+      } else if (typeof result === "number") {
+        score = result;
+      }
 
       setMatchScore(score);
 
-      // animate the circle
-      controls.start({ strokeDashoffset: (1 - score / 100) * 2 * Math.PI * 50 });
+      const radius = 50;
+      const circumference = 2 * Math.PI * radius;
+      const offset = (1 - score / 100) * circumference;
+      controls.start({ strokeDashoffset: offset });
 
-      // you can extend to show matched/missing keywords
-      if (result.matched_keywords) {
-        setMatchedKeywords(result.matched_keywords || []);
-      }
-      if (result.missing_keywords) {
-        setMissingKeywords(result.missing_keywords || []);
-      }
+      setMatchedKeywords(result.matched_keywords || []);
+      setMissingKeywords(result.missing_keywords || []);
     } catch (err) {
-      console.error(err);
+      console.error("❌ Analyze error:", err);
       alert(err.message || "Failed to analyze resume");
     }
   };
@@ -174,7 +191,12 @@ const ResumeAnalyzer = () => {
                 {matchedKeywords.length ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {matchedKeywords.map((k) => (
-                      <span key={k} className="px-2 py-1 bg-green-600/30 rounded text-sm">{k}</span>
+                      <span
+                        key={k}
+                        className="px-2 py-1 bg-green-600/30 rounded text-sm"
+                      >
+                        {k}
+                      </span>
                     ))}
                   </div>
                 ) : (
@@ -185,7 +207,12 @@ const ResumeAnalyzer = () => {
                 {missingKeywords.length ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {missingKeywords.map((k) => (
-                      <span key={k} className="px-2 py-1 bg-red-600/20 rounded text-sm">{k}</span>
+                      <span
+                        key={k}
+                        className="px-2 py-1 bg-red-600/20 rounded text-sm"
+                      >
+                        {k}
+                      </span>
                     ))}
                   </div>
                 ) : (
@@ -203,7 +230,11 @@ const ResumeAnalyzer = () => {
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <img src={uploadImg} alt="Upload Illustration" className="w-3/4 lg:w-full rounded-2xl shadow-2xl" />
+          <img
+            src={uploadImg}
+            alt="Upload Illustration"
+            className="w-3/4 lg:w-full rounded-2xl shadow-2xl"
+          />
         </motion.div>
       </div>
 
